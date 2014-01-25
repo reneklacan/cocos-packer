@@ -6,7 +6,7 @@ include Magick
 
 class EmptyImage < ImageList
   def initialize
-    super('resources/nothing.png')
+    super('tmp/empty.png')
   end
 end
 
@@ -20,7 +20,8 @@ class Tileset
   end
 
   def self.empty(width, height, tile_width, tile_height)
-    image = EmptyImage.new.resize_to_fill(width, height)
+    system "convert -size #{width}x#{height} xc:none tmp/empty.png"
+    image = EmptyImage.new #.resize_to_fill(width, height)
     Tileset.new(image, tile_width, tile_height)
   end
 
@@ -63,8 +64,10 @@ class Tileset
   end
 
   def tiles=(tiles)
+    puts 'Creating output...'
     offset_y = 0
-    tiles.each do |row|
+    length = tiles.count
+    tiles.each_with_index do |row, i|
       offset_x = 0
       row.each do |image|
         @image.composite!(
@@ -77,7 +80,9 @@ class Tileset
         offset_x += @tile_width
       end
       offset_y += @tile_height
+      print "  #{(100.to_f/length*(i + 1)).round}%       \r"
     end
+    puts
     create_desc_image
   end
 
@@ -90,10 +95,12 @@ class Tileset
   end
 
   def create_desc_image
+    puts 'Creating description...'
     @desc_image = @image.dup
     id = 0
-    (0..(height - @tile_height)).step(@tile_height).map do |y|
-      (0..(width - @tile_width)).step(@tile_width).map do |x|
+    max_y, max_x = height - @tile_height, width - @tile_width
+    (0..max_y).step(@tile_height).map do |y|
+      (0..max_x).step(@tile_width).map do |x|
         id += 1
         Draw.new.annotate(@desc_image, 32, 48, x, y, id.to_s) do
           self.font_family = 'Helvetica'
@@ -103,7 +110,9 @@ class Tileset
           self.gravity = CenterGravity
         end
       end
+      print "  #{(100.to_f/max_y*y).round}%       \r"
     end
+    puts ''
   end
 
   def write_desc(filename)
@@ -114,49 +123,54 @@ end
 settings = {
   'input' => [
     {
-      'filename'  => 'tileb.png',
+      'filename'  => 'input/tileb.png',
       'tile_height' => 32,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'blocks1.png',
+      'filename'  => 'input/blocks1.png',
       'tile_height' => 48,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'blocks2.png',
+      'filename'  => 'input/blocks2.png',
       'tile_height' => 48,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'blocks3.png',
+      'filename'  => 'input/blocks3.png',
       'tile_height' => 48,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'blocks4.png',
+      'filename'  => 'input/blocks4.png',
       'tile_height' => 48,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'floors1.png',
+      'filename'  => 'input/floors1.png',
       'tile_height' => 32,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'vx_chara01_a.png',
+      'filename'  => 'input/vx_chara01_a.png',
       'tile_height' => 48,
       'tile_width' => 32,
     },
     {
-      'filename'  => 'bomb.png',
+      'filename'  => 'input/bomb.png',
       'tile_height' => 32,
       'tile_width' => 32,
     },
     {
-      'filename'  => '38189015.png',
+      'filename'  => 'input/38189015.png',
       'tile_height' => 32,
       'tile_width' => 32,
+    },
+    {
+      'filename'  => 'input/bigset.png',
+      'tile_height' => 24,
+      'tile_width' => 24,
     },
   ],
   'output' => {
