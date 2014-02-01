@@ -72,8 +72,9 @@ class Tileset
       row.each do |image|
         @image.composite!(
           image,
-          offset_x,
-          offset_y + @tile_height - image.rows,
+          offset_x + (@tile_width - image.columns)/2,
+          offset_y + (image.rows >= @tile_width ? @tile_height - image.rows : @tile_width - image.rows/2),
+          #offset_y + @tile_height - image.rows,
           #offset_y,
           OverlayCompositeOp
         )
@@ -83,7 +84,6 @@ class Tileset
       print "  #{(100.to_f/length*(i + 1)).round}%       \r"
     end
     puts
-    create_desc_image
   end
 
   def display
@@ -100,6 +100,7 @@ class Tileset
     id = 0
     max_y, max_x = height - @tile_height, width - @tile_width
     (0..max_y).step(@tile_height).map do |y|
+      print "  #{(100.to_f/max_y*y).round}%       \r"
       (0..max_x).step(@tile_width).map do |x|
         id += 1
         Draw.new.annotate(@desc_image, 32, 48, x, y, id.to_s) do
@@ -107,16 +108,16 @@ class Tileset
           self.fill = 'white'
           self.pointsize = 12
           self.undercolor = 'black'
-          self.gravity = CenterGravity
+          self.gravity = NorthGravity
         end
       end
-      print "  #{(100.to_f/max_y*y).round}%       \r"
     end
     puts ''
   end
 
   def write_desc(filename)
-    @desc_image.write(filename)
+    create_desc_image
+    @desc_image.flatten_images.write(filename)
   end
 end
 
