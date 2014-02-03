@@ -27,14 +27,14 @@ class Tileset
 
   def self.merge(tilesets, settings)
     tiles = tilesets.map(&:tiles).reduce(&:+)
-    height = tiles.size*settings['tile_height']
-    width = tiles.map(&:size).max*settings['tile_width']
+    height = settings['max_y'] #tiles.size*settings['tile_height']
+    width = settings['max_x'] #tiles.map(&:size).max*settings['tile_width']
 
     result = Tileset.empty(
       width,
       height,
       settings['tile_width'],
-      settings['tile_height']
+      settings['tile_height'],
     )
     result.tiles = tiles
     result
@@ -66,9 +66,10 @@ class Tileset
   def tiles=(tiles)
     puts 'Creating output...'
     offset_y = 0
+    shift_x = 0
     length = tiles.count
     tiles.each_with_index do |row, i|
-      offset_x = 0
+      offset_x = shift_x
       row.each do |image|
         @image.composite!(
           image,
@@ -81,6 +82,10 @@ class Tileset
         offset_x += @tile_width
       end
       offset_y += @tile_height
+      if offset_y + @tile_height > height
+        offset_y = 0
+        shift_x += 512
+      end
       print "  #{(100.to_f/length*(i + 1)).round}%       \r"
     end
     puts
@@ -178,6 +183,8 @@ settings = {
     'filename'  => 'output.png',
     'tile_height' => 48,
     'tile_width' => 32,
+    'max_x' => 2048,
+    'max_y' => 2016,
   }
 }
 
